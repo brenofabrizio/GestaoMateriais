@@ -79,6 +79,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def get_full_name(self):
+        return f'{self.first_name} {self.last_name}'.strip()
+
 
 class UserRole(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
