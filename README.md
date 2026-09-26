@@ -67,3 +67,12 @@ Docker é opcional no desenvolvimento inicial. O frontend será implantado na Ve
 - Toda mudança relevante gera auditoria;
 - Testes devem acompanhar cada regra crítica;
 - Não usar dados fictícios como substituto do banco transacional.
+
+## Documentação
+
+- `docs/PRD.md` — requisitos, escopo e roadmap;
+- `docs/TRD.md` — arquitetura e requisitos técnicos;
+- `docs/APP-FLOW.md` — fluxos do produto;
+- `docs/UI-UX-DESIGN.md` — diretrizes de interface;
+- `docs/IMPLEMENTATION-PLAN.md` — plano de execução;
+- `docs/README.md` — índice da documentação.
