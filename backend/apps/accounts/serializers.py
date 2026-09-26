@@ -15,16 +15,23 @@ class AreaSummarySerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+class RoleSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    code = serializers.CharField()
+    name = serializers.CharField()
+
+
 class CurrentUserSerializer(serializers.ModelSerializer):
     organization = OrganizationSummarySerializer(read_only=True)
     area = AreaSummarySerializer(read_only=True)
+    roles = RoleSummarySerializer(many=True, read_only=True)
     full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'first_name', 'last_name', 'full_name',
-            'organization', 'area', 'is_active',
+            'organization', 'area', 'roles', 'is_active',
         )
 
     def get_full_name(self, obj):

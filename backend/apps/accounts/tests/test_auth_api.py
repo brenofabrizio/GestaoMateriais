@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.accounts.models import User
+from apps.accounts.models import Role, UserRole
 from apps.organizations.models import Area, Organization
 
 
@@ -21,6 +22,12 @@ class AuthenticationApiTests(APITestCase):
             organization=self.organization,
             area=self.area,
         )
+        self.role = Role.objects.create(
+            organization=self.organization,
+            code='AREA_MANAGER',
+            name='Gestor de área',
+        )
+        UserRole.objects.create(user=self.user, role=self.role)
 
     def test_user_can_login_and_access_me(self):
         response = self.client.post(
@@ -40,6 +47,7 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(me_response.data['email'], 'admin@exemplo.com')
         self.assertEqual(me_response.data['organization']['slug'], 'empresa-exemplo')
         self.assertEqual(me_response.data['area']['code'], 'TI')
+        self.assertEqual(me_response.data['roles'][0]['code'], 'AREA_MANAGER')
 
     def test_invalid_credentials_are_rejected(self):
         response = self.client.post(
