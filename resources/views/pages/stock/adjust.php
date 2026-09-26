@@ -1,1 +1,0 @@
-<?php $mode = 'ajuste'; include BASE_PATH . '/resources/views/pages/stock/_form.php';

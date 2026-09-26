@@ -1,39 +1,69 @@
-# Controle de Brindes
+# Gestão de Materiais
 
-Sistema web para controle de brindes: cadastro, estoque (entrada, saída, ajuste), solicitações, aprovações,
-entregas com protocolo digital, eventos, dashboard, relatórios e auditoria.
+Sistema corporativo para gestão de materiais, estoque, compras, ativos, solicitações e distribuição para TI, Suprimentos, Administrativo e RH.
 
-**Requisitos:** PHP 8.2+ (extensões `pdo_mysql`, `mbstring`, `gd`, `fileinfo`, `openssl`, `zip`, `xml`, `dom`),
-MySQL 8.0.16+ ou MariaDB 10.4+, Apache (mod_rewrite) ou Nginx. Nenhuma licença paga.
+## Objetivo
 
-## Run locally (development)
-1. Start the database (this machine: MariaDB 10.11 on port 3307):
-   `Start-Process C:\Tools\mariadb-10.11.19-winx64\bin\mariadbd.exe -ArgumentList '--defaults-file=C:\Tools\mysqldata-brindes\my.ini' -WindowStyle Hidden`
-2. `.env` is already configured for it (copy `.env.example` on other machines).
-3. First time / reset with demo data: `C:\Tools\php82\php.exe bin\install.php --fresh --demo`
-4. Reset seguro de homologação sem dados: `php bin/reset-homologation.php`; com demo: `php bin/reset-homologation.php --demo`
-5. Start the web server: `set PHP_BIN=C:\Tools\php82\php.exe` then `bin\serve.bat` → http://127.0.0.1:8000
-6. Demo logins (password `Demo@123`): `admin@brindes.local`, `gestor@brindes.local`, `operacao@brindes.local`, `solicitante@brindes.local`, `industria@brindes.local` (portal da indústria)
+Criar uma plataforma modular, auditável e escalável para controlar o ciclo completo dos materiais:
 
-## Tests
-`php tests/scenarios.php` — business-rule scenarios on a separate database (`brindes_test`). Must end with "0 reprovados".
+```text
+Catálogo → Solicitação → Aprovação → Compra/Separação → Recebimento → Entrega → Inventário
+```
 
-## Documentation
-Índice: `docs/INDICE.md`
+## Stack
 
-- `docs/Manual-do-Usuario.md`
-- `docs/Manual-de-Instalacao-e-Migracao.md`
-- `docs/Backup-e-Restauracao.md`
-- `docs/Arquitetura-e-Pastas.md`
-- `docs/Mapa-de-Modulos.md`
-- `docs/Perfis-e-Permissoes.md`
-- `docs/Dependencias.md`
-- `docs/Contas-e-Credenciais.md`
-- `docs/Versao-Final.md`
-- `docs/Apresentacao-Treinamento.html` (editável: troque `{{NOME_DA_EMPRESA}}`)
-- `docs/api-contract.md` — API
-- `docs/database.md` e `docs/diagrama-banco.html` — modelo de dados
-- `docs/modelos/` — planilhas modelo para importação
-- `VERSION` — número desta entrega (1.1.0)
+- Frontend: Next.js, React, TypeScript e Tailwind CSS
+- Backend: Django + Django REST Framework
+- Banco: PostgreSQL gerenciado (Neon ou Supabase)
+- Autenticação: Django REST Framework + JWT/HttpOnly cookies
+- Jobs e filas: Celery + Redis gerenciado
+- Arquivos: S3, Supabase Storage ou Cloudflare R2
+- IA futura: serviço Python/FastAPI separado
+- Testes: Pytest, Vitest, Testing Library e Playwright
 
-Garantia de correção de erros nas funcionalidades entregues: **30 dias** após a entrega (novas funcionalidades à parte).
+## Estrutura
+
+```text
+frontend/      Aplicação Next.js
+backend/       API Django + Django REST Framework
+ai-service/    Serviço Python/FastAPI para IA futura
+infra/         Configurações de deploy e serviços externos
+docs/          Arquitetura, regras e decisões
+```
+
+## Primeiro marco
+
+O primeiro marco funcional será a fundação de identidade e organização:
+
+- Login e logout;
+- Recuperação de senha;
+- Organizações;
+- Áreas: TI, Suprimentos, Administrativo e RH;
+- Usuários;
+- Perfis e permissões;
+- Escopo de acesso por área;
+- Auditoria das ações de acesso.
+
+## Ambiente local
+
+Requisitos mínimos:
+
+- Node.js 22+
+- Python 3.11+
+- NPM
+- pip ou uv
+- Conta GitHub
+- Banco PostgreSQL gerenciado
+
+Docker é opcional no desenvolvimento inicial. O frontend será implantado na Vercel e o backend Django em Railway, Render ou Fly.io.
+
+## Princípios do projeto
+
+- Toda regra de negócio deve estar no backend;
+- O frontend nunca decide permissão sozinho;
+- Dados financeiros, de estoque e auditoria devem ser rastreáveis;
+- Movimentações de estoque são imutáveis;
+- Exclusões serão lógicas quando houver histórico;
+- Toda mudança relevante gera auditoria;
+- Testes devem acompanhar cada regra crítica;
+- Não usar dados fictícios como substituto do banco transacional.

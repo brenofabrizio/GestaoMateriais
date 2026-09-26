@@ -1,20 +1,29 @@
-/vendor/
-/.env
-.env.local
-.env.production
-.env.testing
-!.env.example
-/storage/uploads/**
-/storage/signatures/**
-/storage/pdf/**
-/storage/backups/**
-/storage/logs/**
-/storage/cache/**
-/storage/json/*.json
-!/storage/**/.gitkeep
-!/storage/json/fixtures/**
-/.idea/
-/.vscode/
-Thumbs.db
+# Backend
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/db.sqlite3
+backend/.env
+backend/media/
+backend/staticfiles/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/.env*
+
+# Infra
+infra/.env
+
+# IDE / OS
+.vscode/
+.idea/
+.cursor/
 .DS_Store
-.vercel
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+coverage/

@@ -1,1 +1,0 @@
-<?php include BASE_PATH . '/resources/views/pages/errors/generic.php';
