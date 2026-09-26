@@ -24,6 +24,16 @@ Implementado:
 - Solicitações e aprovação;
 - CI e testes automatizados.
 
-Próximo módulo:
+- Próximo módulo:
 
 - Compras, fornecedores e recebimento.
+
+## PDFs para visualização
+
+- [TRD](pdf/TRD-Gestao-de-Materiais.pdf)
+- [App Flow](pdf/App-Flow-Gestao-de-Materiais.pdf)
+- [UI/UX Design](pdf/UI-UX-Design-Gestao-de-Materiais.pdf)
+- [Plano de implementação](pdf/Plano-Implementacao-Gestao-de-Materiais.pdf)
+- [Arquitetura inicial](pdf/Arquitetura-Inicial-Gestao-de-Materiais.pdf)
+
+Os PDFs são gerados por `docs/tools/generate_pdfs.py` a partir dos Markdown versionados.
