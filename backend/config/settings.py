@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.materials',
     'apps.inventory',
+    'apps.requests',
 ]
 
 MIDDLEWARE = [
