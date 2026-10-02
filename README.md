@@ -44,6 +44,30 @@ O primeiro marco funcional será a fundação de identidade e organização:
 - Escopo de acesso por área;
 - Auditoria das ações de acesso.
 
+## Modo demo e dados iniciais
+
+O frontend possui uma camada de demonstração funcional para permitir deploy imediato na Vercel mesmo antes de conectar o backend:
+
+- `frontend/src/data/seed.json` é o banco inicial versionado, com organização, áreas, usuários, catálogo, almoxarifados, saldos, solicitações, movimentações e auditoria;
+- `frontend/src/lib/store.ts` valida e carrega o seed e persiste alterações no `localStorage` usando a chave `gestao-materiais:data:v1`;
+- a interface permite navegar pelo catálogo, estoque, solicitações, relatórios e criar novas solicitações;
+- “Restaurar demo” remove alterações locais e volta ao conjunto inicial.
+
+Esse modo é adequado para demonstração/homologação. Para produção multiusuário, a fonte de verdade deve ser a API Django com PostgreSQL; `localStorage` não substitui autenticação, autorização ou persistência transacional.
+
+## Deploy do frontend na Vercel
+
+Configure o projeto Vercel apontando para a pasta `frontend` (ou use `frontend/vercel.json`). Os comandos versionados são:
+
+```bash
+npm ci
+npm run lint
+npm run build
+npm run start
+```
+
+O build usa Webpack para funcionar também em ambientes Windows onde o binding nativo do Turbopack pode ser bloqueado por política de segurança. A aplicação demo não exige variável de ambiente; quando a API for conectada, defina `NEXT_PUBLIC_API_URL`.
+
 ## Ambiente local
 
 Requisitos mínimos:
