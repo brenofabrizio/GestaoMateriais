@@ -18,7 +18,41 @@ const statusLabels: Record<string, string> = {
   draft: "Rascunho", rejected: "Rejeitada", delivered: "Entregue", completed: "Finalizada",
 };
 
+type SectorCode = "TI" | "RH" | "ADM" | "COMPRAS";
+type SessionUser = { id: string; name: string; email: string; role: string; sector: SectorCode };
+
+const sectorAccounts: Record<SectorCode, { label: string; email: string; password: string; role: string; description: string }> = {
+  TI: { label: "Tecnologia da Informação", email: "ti@acme.demo", password: "Demo@123", role: "Gestor de TI", description: "Ativos, equipamentos e suporte" },
+  RH: { label: "Recursos Humanos", email: "rh@acme.demo", password: "Demo@123", role: "Gestor de RH", description: "Pessoas, onboarding e desligamentos" },
+  ADM: { label: "Administrativo", email: "adm@acme.demo", password: "Demo@123", role: "Gestor Administrativo", description: "Materiais de uso geral e serviços" },
+  COMPRAS: { label: "Compras", email: "compras@acme.demo", password: "Demo@123", role: "Comprador", description: "Fornecedores, cotações e pedidos" },
+};
+
 export default function Home() {
+  const [session, setSession] = useState<SessionUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    try { return JSON.parse(window.localStorage.getItem("gestao-materiais:session:v1") ?? "null") as SessionUser | null; } catch { return null; }
+  });
+  if (!session) return <LoginScreen onLogin={(user) => { window.localStorage.setItem("gestao-materiais:session:v1", JSON.stringify(user)); setSession(user); }} />;
+  return <Dashboard session={session} onLogout={() => { window.localStorage.removeItem("gestao-materiais:session:v1"); setSession(null); }} />;
+}
+
+function LoginScreen({ onLogin }: { onLogin: (user: SessionUser) => void }) {
+  const [sector, setSector] = useState<SectorCode>("TI");
+  const [email, setEmail] = useState(sectorAccounts.TI.email);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const account = sectorAccounts[sector];
+  function changeSector(next: SectorCode) { setSector(next); setEmail(sectorAccounts[next].email); setPassword(""); setError(""); }
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (email.trim().toLowerCase() !== account.email || password !== account.password) { setError("E-mail, setor ou senha inválidos."); return; }
+    onLogin({ id: `demo-${sector.toLowerCase()}`, name: account.label, email: account.email, role: account.role, sector });
+  }
+  return <main className="login-page"><section className="login-panel"><div className="login-brand"><span className="brand-mark">GM</span><div><strong>Gestão de Materiais</strong><small>Controle operacional corporativo</small></div></div><div className="login-copy"><p className="eyebrow accent">Acesso por setor</p><h1>Entre para continuar a operação.</h1><p>Escolha seu setor. O sistema aplicará o escopo, as permissões e as próximas ações disponíveis para o seu perfil.</p></div><div className="sector-grid">{(Object.keys(sectorAccounts) as SectorCode[]).map((code) => <button type="button" className={`sector-card${sector === code ? " selected" : ""}`} onClick={() => changeSector(code)} key={code}><strong>{code}</strong><span>{sectorAccounts[code].label}</span><small>{sectorAccounts[code].description}</small></button>)}</div><form className="login-form" onSubmit={submit}><label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label><label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" placeholder="Senha do ambiente" required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="primary-button login-button" type="submit">Entrar como {sector}</button></form><p className="demo-hint">Ambiente de demonstração · senha dos setores: <strong>Demo@123</strong></p></section></main>;
+}
+
+function Dashboard({ session, onLogout }: { session: SessionUser; onLogout: () => void }) {
   const [data, setData] = useState<AppData>(() => loadData());
   const [section, setSection] = useState<Section>("overview");
   const [search, setSearch] = useState("");
@@ -52,7 +86,7 @@ export default function Home() {
         <div className="sidebar-footer"><span className="status-dot" /> Ambiente de demonstração<br /><small>Persistência local ativa</small></div>
       </aside>
       <main className="main-content">
-        <header className="topbar"><div><p className="eyebrow">Workspace / Plataforma</p><h1>{title}</h1></div><div className="top-actions"><button className="secondary-button" onClick={resetDemo}>Restaurar demo</button><div className="user-chip"><span className="avatar">AD</span><span>Ana Duarte <small>Administrador</small></span></div></div></header>
+        <header className="topbar"><div><p className="eyebrow">Workspace / {session.sector}</p><h1>{title}</h1></div><div className="top-actions"><button className="secondary-button" onClick={resetDemo}>Restaurar demo</button><div className="user-chip"><span className="avatar">{session.sector.slice(0, 2)}</span><span>{session.name} <small>{session.role}</small></span></div><button className="logout-button" onClick={onLogout}>Sair</button></div></header>
         {notice && <div className="toast" role="status">✓ {notice}</div>}
         {section === "overview" && <Overview data={data} available={available} lowStock={lowStock.length} onNew={() => setShowRequest(true)} onNavigate={setSection} />}
         {section === "materials" && <Materials data={data} materials={filteredMaterials} search={search} setSearch={setSearch} />}

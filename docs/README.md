@@ -10,6 +10,8 @@
 | [Arquitetura inicial](arquitetura-inicial.md) | Decisões estruturais iniciais |
 | [Sprints](sprints.md) | Roadmap detalhado por sprint |
 | [Ambiente local](ambiente-local.md) | Pré-requisitos e deploy |
+| [Regras de domínio](DOMAIN-RULES.md) | Diferença entre catálogo e estoque, escopos e regras obrigatórias |
+| [Prompt mestre](MASTER-PROMPT.md) | Contexto completo para implementação, revisão e publicação |
 
 ## Estado atual
 

@@ -44,7 +44,19 @@ O primeiro marco funcional será a fundação de identidade e organização:
 - Escopo de acesso por área;
 - Auditoria das ações de acesso.
 
-## Modo demo e dados iniciais
+## Login por setor (modo demonstração)
+
+A tela inicial agora separa o acesso por setor: **TI**, **RH**, **ADM** e **COMPRAS**. No ambiente demo, os e-mails são `ti@acme.demo`, `rh@acme.demo`, `adm@acme.demo` e `compras@acme.demo`; todos usam a senha temporária `Demo@123`.
+
+Essas contas são exclusivamente para homologação do frontend. Antes de produção, o login deve usar `/api/auth/token/` do Django, com usuários persistidos, senha com hash, refresh token seguro, logout e autorização por escopo.
+
+## Materiais e estoque
+
+- **Materiais** é o catálogo mestre: SKU, nome, categoria, tipo, unidade, descrição e níveis mínimo/máximo.
+- **Estoque** é a posição operacional: saldo físico, reservado, disponível, almoxarifado, entradas, saídas, transferências e histórico.
+
+Em resumo: material define **o que o item é**; estoque registra **onde está e quanto existe**.
+
 
 O frontend possui uma camada de demonstração funcional para permitir deploy imediato na Vercel mesmo antes de conectar o backend:
 
