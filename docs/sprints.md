@@ -1,5 +1,18 @@
 # Roadmap de sprints — Gestão de Materiais
 
+## Sprint 00 — Acesso por setor, linguagem e identidade visual
+
+**Implementada no frontend demo e publicada na Vercel.**
+
+- Tela de login por setor: TI, RH, ADM e COMPRAS;
+- Sessão demo com logout e escopo visual do setor;
+- Distinção documentada entre catálogo de materiais e estoque operacional;
+- Paleta azul corporativa: `#01135D`, `#021E92` e `#4a86e8`;
+- Prompt mestre de implementação e regras de domínio;
+- Smoke test local e build de produção verificados.
+
+**Dependência para produção:** substituir o login demo pelo JWT do Django e persistir usuários, permissões e escopos no backend.
+
 ## Sprint 01 — Fundação técnica e arquitetura
 
 Objetivo: criar uma base executável, testável e preparada para produção.
