@@ -1,58 +1,59 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generatedAt": "2026-01-01T00:00:00.000Z",
-  "organization": {
-    "id": "org-demo",
-    "name": "Acme Tecnologia Ltda.",
-    "document": "00.000.000/0001-00",
-    "timezone": "America/Sao_Paulo",
-    "currency": "BRL"
-  },
+  "organization": { "id": "org-demo", "name": "Acme Tecnologia Ltda.", "document": "00.000.000/0001-00", "timezone": "America/Sao_Paulo", "currency": "BRL" },
   "areas": [
-    { "id": "area-ti", "code": "TI", "name": "Tecnologia da Informação", "color": "#4f46e5" },
-    { "id": "area-sup", "code": "SUP", "name": "Suprimentos", "color": "#0f766e" },
-    { "id": "area-adm", "code": "ADM", "name": "Administrativo", "color": "#b45309" },
-    { "id": "area-rh", "code": "RH", "name": "Recursos Humanos", "color": "#be185d" }
+    { "id": "area-ti", "code": "TI", "name": "Tecnologia da Informação", "color": "#021E92" },
+    { "id": "area-rh", "code": "RH", "name": "Recursos Humanos", "color": "#4a86e8" },
+    { "id": "area-adm", "code": "ADM", "name": "Administrativo", "color": "#315bc3" },
+    { "id": "area-compras", "code": "COMPRAS", "name": "Compras", "color": "#01135D" }
   ],
   "users": [
-    { "id": "user-admin", "name": "Ana Duarte", "email": "ana.duarte@acme.test", "role": "Administrador", "areaId": "area-ti", "status": "active" },
-    { "id": "user-requester", "name": "Carlos Mendes", "email": "carlos.mendes@acme.test", "role": "Solicitante", "areaId": "area-adm", "status": "active" }
+    { "id": "user-ti", "name": "Equipe de TI", "email": "ti@acme.demo", "role": "Gestor de TI", "areaId": "area-ti", "sectorId": "TI", "status": "active" },
+    { "id": "user-rh", "name": "Equipe de RH", "email": "rh@acme.demo", "role": "Gestor de RH", "areaId": "area-rh", "sectorId": "RH", "status": "active" },
+    { "id": "user-adm", "name": "Equipe Administrativa", "email": "adm@acme.demo", "role": "Gestor Administrativo", "areaId": "area-adm", "sectorId": "ADM", "status": "active" },
+    { "id": "user-compras", "name": "Equipe de Compras", "email": "compras@acme.demo", "role": "Comprador", "areaId": "area-compras", "sectorId": "COMPRAS", "status": "active" }
   ],
   "categories": [
     { "id": "cat-it", "code": "IT", "name": "Tecnologia", "isActive": true },
     { "id": "cat-office", "code": "OFFICE", "name": "Material de escritório", "isActive": true },
-    { "id": "cat-clean", "code": "CLEAN", "name": "Limpeza e conservação", "isActive": true }
+    { "id": "cat-hr", "code": "HR", "name": "Integração e pessoas", "isActive": true },
+    { "id": "cat-buy", "code": "BUY", "name": "Compras e suprimentos", "isActive": true }
   ],
   "warehouses": [
-    { "id": "wh-main", "code": "ALM-01", "name": "Almoxarifado central", "address": "São Paulo - SP", "isActive": true },
-    { "id": "wh-it", "code": "TI-01", "name": "Estoque de TI", "address": "São Paulo - SP", "isActive": true }
+    { "id": "wh-ti", "code": "TI-01", "name": "Estoque de TI", "sectorId": "TI", "address": "São Paulo - SP", "isActive": true },
+    { "id": "wh-rh", "code": "RH-01", "name": "Estoque de RH", "sectorId": "RH", "address": "São Paulo - SP", "isActive": true },
+    { "id": "wh-adm", "code": "ADM-01", "name": "Almoxarifado Administrativo", "sectorId": "ADM", "address": "São Paulo - SP", "isActive": true },
+    { "id": "wh-compras", "code": "COM-01", "name": "Recebimento de Compras", "sectorId": "COMPRAS", "address": "São Paulo - SP", "isActive": true }
   ],
   "materials": [
-    { "id": "mat-notebook", "sku": "TI-NB-001", "name": "Notebook corporativo", "categoryId": "cat-it", "kind": "asset", "unit": "UN", "minimumStock": 5, "maximumStock": 20, "isActive": true },
-    { "id": "mat-monitor", "sku": "TI-MON-001", "name": "Monitor 24 polegadas", "categoryId": "cat-it", "kind": "asset", "unit": "UN", "minimumStock": 8, "maximumStock": 30, "isActive": true },
-    { "id": "mat-chair", "sku": "ADM-CAD-001", "name": "Cadeira ergonômica", "categoryId": "cat-office", "kind": "asset", "unit": "UN", "minimumStock": 3, "maximumStock": 15, "isActive": true },
-    { "id": "mat-paper", "sku": "OFF-PAP-001", "name": "Papel sulfite A4", "categoryId": "cat-office", "kind": "consumable", "unit": "CX", "minimumStock": 10, "maximumStock": 60, "isActive": true },
-    { "id": "mat-toner", "sku": "TI-TON-001", "name": "Toner impressora laser", "categoryId": "cat-it", "kind": "consumable", "unit": "UN", "minimumStock": 4, "maximumStock": 20, "isActive": true }
+    { "id": "mat-notebook", "sku": "TI-NB-001", "name": "Notebook corporativo", "categoryId": "cat-it", "sectorId": "TI", "kind": "asset", "unit": "UN", "minimumStock": 5, "maximumStock": 20, "isActive": true },
+    { "id": "mat-monitor", "sku": "TI-MON-001", "name": "Monitor 24 polegadas", "categoryId": "cat-it", "sectorId": "TI", "kind": "asset", "unit": "UN", "minimumStock": 8, "maximumStock": 30, "isActive": true },
+    { "id": "mat-uniform", "sku": "RH-UNI-001", "name": "Kit de integração", "categoryId": "cat-hr", "sectorId": "RH", "kind": "consumable", "unit": "KIT", "minimumStock": 5, "maximumStock": 30, "isActive": true },
+    { "id": "mat-chair", "sku": "ADM-CAD-001", "name": "Cadeira ergonômica", "categoryId": "cat-office", "sectorId": "ADM", "kind": "asset", "unit": "UN", "minimumStock": 3, "maximumStock": 15, "isActive": true },
+    { "id": "mat-paper", "sku": "ADM-PAP-001", "name": "Papel sulfite A4", "categoryId": "cat-office", "sectorId": "ADM", "kind": "consumable", "unit": "CX", "minimumStock": 10, "maximumStock": 60, "isActive": true },
+    { "id": "mat-toner", "sku": "COM-TON-001", "name": "Toner impressora laser", "categoryId": "cat-buy", "sectorId": "COMPRAS", "kind": "consumable", "unit": "UN", "minimumStock": 4, "maximumStock": 20, "isActive": true }
   ],
   "stockBalances": [
-    { "id": "bal-notebook", "materialId": "mat-notebook", "warehouseId": "wh-it", "onHand": 12, "reserved": 4 },
-    { "id": "bal-monitor", "materialId": "mat-monitor", "warehouseId": "wh-it", "onHand": 6, "reserved": 2 },
-    { "id": "bal-chair", "materialId": "mat-chair", "warehouseId": "wh-main", "onHand": 18, "reserved": 2 },
-    { "id": "bal-paper", "materialId": "mat-paper", "warehouseId": "wh-main", "onHand": 42, "reserved": 0 },
-    { "id": "bal-toner", "materialId": "mat-toner", "warehouseId": "wh-it", "onHand": 3, "reserved": 0 }
+    { "id": "bal-ti-notebook", "materialId": "mat-notebook", "warehouseId": "wh-ti", "sectorId": "TI", "onHand": 12, "reserved": 4 },
+    { "id": "bal-ti-monitor", "materialId": "mat-monitor", "warehouseId": "wh-ti", "sectorId": "TI", "onHand": 6, "reserved": 2 },
+    { "id": "bal-rh-uniform", "materialId": "mat-uniform", "warehouseId": "wh-rh", "sectorId": "RH", "onHand": 16, "reserved": 4 },
+    { "id": "bal-adm-chair", "materialId": "mat-chair", "warehouseId": "wh-adm", "sectorId": "ADM", "onHand": 18, "reserved": 2 },
+    { "id": "bal-adm-paper", "materialId": "mat-paper", "warehouseId": "wh-adm", "sectorId": "ADM", "onHand": 42, "reserved": 0 },
+    { "id": "bal-buy-toner", "materialId": "mat-toner", "warehouseId": "wh-compras", "sectorId": "COMPRAS", "onHand": 3, "reserved": 0 }
   ],
   "requests": [
-    { "id": "req-1001", "code": "REQ-1001", "title": "Kit de onboarding de novo colaborador", "requesterId": "user-requester", "areaId": "area-adm", "status": "pending_approval", "createdAt": "2026-09-29T13:20:00.000Z", "items": [{ "materialId": "mat-notebook", "quantity": 1 }, { "materialId": "mat-monitor", "quantity": 1 }] },
-    { "id": "req-1002", "code": "REQ-1002", "title": "Reposição de papel A4", "requesterId": "user-requester", "areaId": "area-adm", "status": "approved", "createdAt": "2026-09-27T09:10:00.000Z", "items": [{ "materialId": "mat-paper", "quantity": 8 }] },
-    { "id": "req-1003", "code": "REQ-1003", "title": "Toner para impressora da recepção", "requesterId": "user-requester", "areaId": "area-adm", "status": "in_separation", "createdAt": "2026-09-24T16:40:00.000Z", "items": [{ "materialId": "mat-toner", "quantity": 2 }] }
+    { "id": "req-1001", "code": "REQ-1001", "title": "Notebook para novo colaborador", "requesterId": "user-rh", "sectorId": "RH", "approverSector": "TI", "approverId": null, "status": "pending_approval", "createdAt": "2026-09-29T13:20:00.000Z", "items": [{ "materialId": "mat-notebook", "quantity": 1 }] },
+    { "id": "req-1002", "code": "REQ-1002", "title": "Reposição de papel A4", "requesterId": "user-adm", "sectorId": "ADM", "approverSector": "ADM", "approverId": "user-adm", "status": "approved", "createdAt": "2026-09-27T09:10:00.000Z", "items": [{ "materialId": "mat-paper", "quantity": 8 }] },
+    { "id": "req-1003", "code": "REQ-1003", "title": "Reposição de toner", "requesterId": "user-compras", "sectorId": "COMPRAS", "approverSector": "COMPRAS", "approverId": "user-compras", "status": "in_separation", "createdAt": "2026-09-24T16:40:00.000Z", "items": [{ "materialId": "mat-toner", "quantity": 2 }] }
   ],
   "movements": [
-    { "id": "mov-001", "materialId": "mat-paper", "warehouseId": "wh-main", "kind": "receipt", "quantity": 20, "createdAt": "2026-09-28T10:00:00.000Z", "note": "Nota fiscal 1248" },
-    { "id": "mov-002", "materialId": "mat-notebook", "warehouseId": "wh-it", "kind": "reservation", "quantity": 1, "createdAt": "2026-09-29T13:22:00.000Z", "note": "REQ-1001" },
-    { "id": "mov-003", "materialId": "mat-toner", "warehouseId": "wh-it", "kind": "issue", "quantity": 2, "createdAt": "2026-09-30T14:15:00.000Z", "note": "REQ-1003" }
+    { "id": "mov-001", "materialId": "mat-paper", "warehouseId": "wh-adm", "sectorId": "ADM", "kind": "receipt", "quantity": 20, "createdAt": "2026-09-28T10:00:00.000Z", "note": "Nota fiscal 1248", "performedBy": "user-adm" },
+    { "id": "mov-002", "materialId": "mat-notebook", "warehouseId": "wh-ti", "sectorId": "TI", "kind": "reservation", "quantity": 1, "createdAt": "2026-09-29T13:22:00.000Z", "note": "REQ-1001", "performedBy": "user-ti" },
+    { "id": "mov-003", "materialId": "mat-toner", "warehouseId": "wh-compras", "sectorId": "COMPRAS", "kind": "issue", "quantity": 2, "createdAt": "2026-09-30T14:15:00.000Z", "note": "REQ-1003", "performedBy": "user-compras" }
   ],
   "auditLogs": [
-    { "id": "audit-001", "action": "request.submitted", "actorId": "user-requester", "resource": "REQ-1001", "createdAt": "2026-09-29T13:20:00.000Z" },
-    { "id": "audit-002", "action": "stock.issue", "actorId": "user-admin", "resource": "mat-toner", "createdAt": "2026-09-30T14:15:00.000Z" }
+    { "id": "audit-001", "action": "request.submitted", "actorId": "user-rh", "resource": "REQ-1001", "sectorId": "RH", "createdAt": "2026-09-29T13:20:00.000Z" },
+    { "id": "audit-002", "action": "stock.issue", "actorId": "user-compras", "resource": "mat-toner", "sectorId": "COMPRAS", "createdAt": "2026-09-30T14:15:00.000Z" }
   ]
 }

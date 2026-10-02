@@ -67,23 +67,52 @@ function Dashboard({ session, onLogout }: { session: SessionUser; onLogout: () =
   const [section, setSection] = useState<Section>("overview");
   const [search, setSearch] = useState("");
   const [showRequest, setShowRequest] = useState(false);
+  const [showStockEntry, setShowStockEntry] = useState(false);
   const [notice, setNotice] = useState("");
 
   useEffect(() => { saveData(data); }, [data]);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 3500); return () => clearTimeout(timer); }, [notice]);
 
-  const available = data.stockBalances.reduce((sum, item) => sum + item.onHand - item.reserved, 0);
-  const lowStock = data.stockBalances.filter((balance) => {
-    const material = data.materials.find((item) => item.id === balance.materialId);
+  const scopedData = useMemo(() => ({
+    ...data,
+    materials: data.materials.filter((item) => item.sectorId === session.sector),
+    warehouses: data.warehouses.filter((item) => item.sectorId === session.sector),
+    stockBalances: data.stockBalances.filter((item) => item.sectorId === session.sector),
+    requests: data.requests.filter((item) => item.sectorId === session.sector || item.approverSector === session.sector),
+    movements: data.movements.filter((item) => item.sectorId === session.sector),
+  }), [data, session.sector]);
+  const available = scopedData.stockBalances.reduce((sum, item) => sum + item.onHand - item.reserved, 0);
+  const lowStock = scopedData.stockBalances.filter((balance) => {
+    const material = scopedData.materials.find((item) => item.id === balance.materialId);
     return material && balance.onHand - balance.reserved <= material.minimumStock;
   });
-  const filteredMaterials = useMemo(() => data.materials.filter((material) => `${material.name} ${material.sku}`.toLowerCase().includes(search.toLowerCase())), [data.materials, search]);
+  const filteredMaterials = useMemo(() => scopedData.materials.filter((material) => `${material.name} ${material.sku}`.toLowerCase().includes(search.toLowerCase())), [scopedData.materials, search]);
   const title = nav.find((item) => item.id === section)?.label ?? "Visão geral";
 
   function createRequest(title: string, materialId: string, quantity: number) {
-    const request = { id: createId("req"), code: `REQ-${1000 + data.requests.length + 1}`, title, requesterId: "user-requester", areaId: "area-adm", status: "pending_approval", createdAt: new Date().toISOString(), items: [{ materialId, quantity }] };
-    setData((current) => ({ ...current, requests: [request, ...current.requests] }));
+    const approverSector = session.sector === "RH" ? "TI" : session.sector;
+    const request = { id: createId("req"), code: `REQ-${1000 + data.requests.length + 1}`, title, requesterId: session.id, sectorId: session.sector, approverSector, approverId: null, status: "pending_approval", createdAt: new Date().toISOString(), items: [{ materialId, quantity }] };
+    setData((current) => ({ ...current, requests: [request, ...current.requests], auditLogs: [{ id: createId("audit"), action: "request.submitted", actorId: session.id, resource: request.code, sectorId: session.sector, createdAt: new Date().toISOString() }, ...current.auditLogs] }));
     setShowRequest(false); setNotice("Solicitação criada e enviada para aprovação."); setSection("requests");
+  }
+
+  function addStock(materialId: string, quantity: number, note: string) {
+    const material = scopedData.materials.find((item) => item.id === materialId);
+    const warehouse = scopedData.warehouses[0];
+    if (!material || !warehouse || quantity <= 0) { setNotice("Informe uma quantidade válida e um material do setor."); return; }
+    setData((current) => {
+      const existing = current.stockBalances.find((item) => item.materialId === materialId && item.sectorId === session.sector);
+      const stockBalances = existing ? current.stockBalances.map((item) => item.id === existing.id ? { ...item, onHand: item.onHand + quantity } : item) : [...current.stockBalances, { id: createId("bal"), materialId, warehouseId: warehouse.id, sectorId: session.sector, onHand: quantity, reserved: 0 }];
+      return { ...current, stockBalances, movements: [{ id: createId("mov"), materialId, warehouseId: warehouse.id, sectorId: session.sector, kind: "receipt", quantity, createdAt: new Date().toISOString(), note: note || "Entrada manual", performedBy: session.id }, ...current.movements], auditLogs: [{ id: createId("audit"), action: "stock.receipt", actorId: session.id, resource: material.sku, sectorId: session.sector, createdAt: new Date().toISOString() }, ...current.auditLogs] };
+    });
+    setShowStockEntry(false); setNotice("Entrada registrada no estoque do setor."); setSection("stock");
+  }
+
+  function decideRequest(requestId: string, decision: "approved" | "rejected", note: string) {
+    const target = data.requests.find((item) => item.id === requestId);
+    if (!target || target.approverSector !== session.sector || target.requesterId === session.id || target.status !== "pending_approval") { setNotice("Você não pode decidir esta solicitação."); return; }
+    setData((current) => ({ ...current, requests: current.requests.map((item) => item.id === requestId ? { ...item, status: decision, approverId: session.id, approvalNote: note, decidedAt: new Date().toISOString() } : item), auditLogs: [{ id: createId("audit"), action: `request.${decision}`, actorId: session.id, resource: target.code, sectorId: session.sector, createdAt: new Date().toISOString(), note }, ...current.auditLogs] }));
+    setNotice(decision === "approved" ? "Solicitação aprovada." : "Solicitação rejeitada com justificativa.");
   }
 
   function resetDemo() { setData(resetData()); setNotice("Dados de demonstração restaurados."); }
@@ -98,14 +127,15 @@ function Dashboard({ session, onLogout }: { session: SessionUser; onLogout: () =
       <main className="main-content">
         <header className="topbar"><div><p className="eyebrow">Workspace / {session.sector}</p><h1>{title}</h1></div><div className="top-actions"><button className="secondary-button" onClick={resetDemo}>Restaurar demo</button><div className="user-chip"><span className="avatar">{session.sector.slice(0, 2)}</span><span>{session.name} <small>{session.role}</small></span></div><button className="logout-button" onClick={onLogout}>Sair</button></div></header>
         {notice && <div className="toast" role="status">✓ {notice}</div>}
-        {section === "overview" && <Overview data={data} available={available} lowStock={lowStock.length} onNew={() => setShowRequest(true)} onNavigate={setSection} />}
-        {section === "materials" && <Materials data={data} materials={filteredMaterials} search={search} setSearch={setSearch} />}
-        {section === "stock" && <Stock data={data} lowStock={lowStock.map((item) => item.materialId)} />}
-        {section === "requests" && <Requests data={data} onNew={() => setShowRequest(true)} />}
+        {section === "overview" && <Overview data={scopedData} available={available} lowStock={lowStock.length} onNew={() => setShowRequest(true)} onNavigate={setSection} />}
+        {section === "materials" && <Materials data={scopedData} materials={filteredMaterials} search={search} setSearch={setSearch} />}
+        {section === "stock" && <Stock data={scopedData} lowStock={lowStock.map((item) => item.materialId)} onAdd={() => setShowStockEntry(true)} />}
+        {section === "requests" && <Requests data={scopedData} session={session} onNew={() => setShowRequest(true)} onDecision={decideRequest} />}
         {section === "purchases" && <Placeholder title="Compras" description="Fornecedores, cotações e pedidos entram nesta visão. A estrutura inicial já está preparada para o próximo módulo." />}
-        {section === "reports" && <Reports data={data} available={available} />}
+        {section === "reports" && <Reports data={scopedData} available={available} />}
       </main>
-      {showRequest && <RequestModal data={data} onClose={() => setShowRequest(false)} onCreate={createRequest} />}
+      {showRequest && <RequestModal data={scopedData} onClose={() => setShowRequest(false)} onCreate={createRequest} />}
+      {showStockEntry && <StockEntryModal data={scopedData} onClose={() => setShowStockEntry(false)} onAdd={addStock} />}
     </div>
   );
 }
@@ -125,11 +155,13 @@ function Status({ value }: { value: string }) { return <span className={`status 
 
 function Materials({ data, materials, search, setSearch }: { data: AppData; materials: AppData["materials"]; search: string; setSearch: (value: string) => void }) { return <section className="panel page-panel"><div className="panel-heading"><div><p className="eyebrow">Catálogo por organização</p><h2>Materiais</h2></div><span className="counter-badge">{materials.length} de {data.materials.length}</span></div><input className="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome ou SKU..." aria-label="Buscar materiais" /><div className="table-wrap"><table><thead><tr><th>Material</th><th>Categoria</th><th>Tipo</th><th>Estoque mínimo</th><th>Status</th></tr></thead><tbody>{materials.map((material) => <tr key={material.id}><td><strong>{material.name}</strong><small>{material.sku}</small></td><td>{data.categories.find((category) => category.id === material.categoryId)?.name}</td><td>{material.kind === "asset" ? "Ativo" : "Consumível"}</td><td>{material.minimumStock} {material.unit}</td><td><span className="dot-label"><i className="green-dot" /> Ativo</span></td></tr>)}</tbody></table></div></section>; }
 
-function Stock({ data, lowStock }: { data: AppData; lowStock: string[] }) { return <section className="panel page-panel"><div className="panel-heading"><div><p className="eyebrow">Saldos e disponibilidade</p><h2>Estoque</h2></div><span className="counter-badge">{data.stockBalances.length} saldos controlados</span></div><div className="table-wrap"><table><thead><tr><th>Material</th><th>Almoxarifado</th><th>Físico</th><th>Reservado</th><th>Disponível</th><th>Situação</th></tr></thead><tbody>{data.stockBalances.map((balance) => { const material = data.materials.find((item) => item.id === balance.materialId)!; const warehouse = data.warehouses.find((item) => item.id === balance.warehouseId); const available = balance.onHand - balance.reserved; return <tr key={balance.id}><td><strong>{material.name}</strong><small>{material.sku}</small></td><td>{warehouse?.name}</td><td>{balance.onHand} {material.unit}</td><td>{balance.reserved} {material.unit}</td><td><strong>{available} {material.unit}</strong></td><td>{lowStock.includes(material.id) ? <Status value="pending_approval" /> : <span className="dot-label"><i className="green-dot" /> Normal</span>}</td></tr>; })}</tbody></table></div></section>; }
+function Stock({ data, lowStock, onAdd }: { data: AppData; lowStock: string[]; onAdd: () => void }) { return <section className="panel page-panel"><div className="panel-heading"><div><p className="eyebrow">Estoque exclusivo de {data.warehouses[0]?.sectorId ?? "setor"}</p><h2>Estoque</h2></div><div className="panel-actions"><span className="counter-badge">{data.stockBalances.length} saldos</span><button className="primary-button small-button" onClick={onAdd}>+ Adicionar entrada</button></div></div><p className="section-help">Registre materiais que o setor já possui. A entrada gera saldo, movimentação e auditoria.</p><div className="table-wrap"><table><thead><tr><th>Material</th><th>Almoxarifado</th><th>Físico</th><th>Reservado</th><th>Disponível</th><th>Situação</th></tr></thead><tbody>{data.stockBalances.map((balance) => { const material = data.materials.find((item) => item.id === balance.materialId)!; const warehouse = data.warehouses.find((item) => item.id === balance.warehouseId); const available = balance.onHand - balance.reserved; return <tr key={balance.id}><td><strong>{material.name}</strong><small>{material.sku}</small></td><td>{warehouse?.name}</td><td>{balance.onHand} {material.unit}</td><td>{balance.reserved} {material.unit}</td><td><strong>{available} {material.unit}</strong></td><td>{lowStock.includes(material.id) ? <Status value="pending_approval" /> : <span className="dot-label"><i className="green-dot" /> Normal</span>}</td></tr>; })}</tbody></table></div></section>; }
 
-function Requests({ data, onNew }: { data: AppData; onNew: () => void }) { return <section className="panel page-panel"><div className="panel-heading"><div><p className="eyebrow">Fluxo de aprovação e atendimento</p><h2>Solicitações</h2></div><button className="primary-button small-button" onClick={onNew}>+ Nova solicitação</button></div><div className="request-list full-list">{data.requests.map((request) => <RequestRow data={data} request={request} key={request.id} />)}</div></section>; }
+function Requests({ data, session, onNew, onDecision }: { data: AppData; session: SessionUser; onNew: () => void; onDecision: (requestId: string, decision: "approved" | "rejected", note: string) => void }) { const [note, setNote] = useState(""); return <section className="panel page-panel"><div className="panel-heading"><div><p className="eyebrow">Fluxo de aprovação e atendimento</p><h2>Solicitações do setor</h2></div><button className="primary-button small-button" onClick={onNew}>+ Nova solicitação</button></div><p className="section-help">Você vê solicitações criadas pelo seu setor e solicitações encaminhadas para sua aprovação.</p><div className="request-list full-list">{data.requests.map((request) => { const canDecide = request.status === "pending_approval" && request.approverSector === session.sector && request.requesterId !== session.id; return <div key={request.id}><RequestRow data={data} request={request} /><div className="request-meta"><span>Solicitante: {data.users.find((user) => user.id === request.requesterId)?.name ?? request.requesterId}</span><span>Aprovador: {request.approverSector}</span>{canDecide && <div className="approval-actions"><input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Justificativa ou observação" aria-label={`Observação ${request.code}`} /><button className="secondary-button" onClick={() => { if (!note.trim()) return; onDecision(request.id, "rejected", note.trim()); setNote(""); }}>Rejeitar</button><button className="primary-button small-button" onClick={() => { onDecision(request.id, "approved", note.trim() || "Aprovada pelo responsável do setor."); setNote(""); }}>Aprovar</button></div>}</div></div>; })}</div></section>; }
 function Reports({ data, available }: { data: AppData; available: number }) { const consumed = data.movements.filter((movement) => movement.kind === "issue").reduce((sum, movement) => sum + movement.quantity, 0); return <section className="panel page-panel"><div className="panel-heading"><div><p className="eyebrow">Indicadores operacionais</p><h2>Relatórios</h2></div></div><div className="report-grid"><div><span>Saldo disponível total</span><strong>{available}</strong><small>unidades controladas</small></div><div><span>Movimentações registradas</span><strong>{data.movements.length}</strong><small>livro de estoque</small></div><div><span>Consumo registrado</span><strong>{consumed}</strong><small>unidades baixadas</small></div></div><div className="info-banner">Os relatórios respeitam a organização selecionada. A persistência definitiva deve ser conectada à API Django antes da produção.</div></section>; }
 function Placeholder({ title, description }: { title: string; description: string }) { return <section className="panel empty-page"><div className="empty-illustration">▤</div><p className="eyebrow">Próximo módulo</p><h2>{title}</h2><p>{description}</p><span className="planned">Estrutura de dados preparada no roadmap</span></section>; }
 function Empty({ text }: { text: string }) { return <div className="empty-state">{text}</div>; }
 
 function RequestModal({ data, onClose, onCreate }: { data: AppData; onClose: () => void; onCreate: (title: string, materialId: string, quantity: number) => void }) { const [title, setTitle] = useState(""); const [materialId, setMaterialId] = useState(data.materials[0]?.id ?? ""); const [quantity, setQuantity] = useState(1); const canSubmit = title.trim().length > 3 && quantity > 0; return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-heading"><div><p className="eyebrow">Nova operação</p><h2 id="modal-title">Criar solicitação</h2></div><button className="close-button" onClick={onClose} aria-label="Fechar">×</button></div><label>Título da solicitação<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex.: Kit de integração" autoFocus /></label><label>Material<select value={materialId} onChange={(event) => setMaterialId(event.target.value)}>{data.materials.map((material) => <option value={material.id} key={material.id}>{material.name} ({material.sku})</option>)}</select></label><label>Quantidade<input type="number" min="1" value={quantity} onChange={(event) => setQuantity(Number(event.target.value))} /></label><div className="modal-actions"><button className="secondary-button" onClick={onClose}>Cancelar</button><button className="primary-button" disabled={!canSubmit} onClick={() => onCreate(title.trim(), materialId, quantity)}>Enviar para aprovação</button></div></div></div>; }
+
+function StockEntryModal({ data, onClose, onAdd }: { data: AppData; onClose: () => void; onAdd: (materialId: string, quantity: number, note: string) => void }) { const [materialId, setMaterialId] = useState(data.materials[0]?.id ?? ""); const [quantity, setQuantity] = useState(1); const [note, setNote] = useState(""); const canSubmit = Boolean(materialId) && quantity > 0; return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="stock-modal-title"><div className="modal-heading"><div><p className="eyebrow">Movimentação de entrada</p><h2 id="stock-modal-title">Adicionar ao estoque</h2></div><button className="close-button" onClick={onClose} aria-label="Fechar">×</button></div><p className="section-help">A entrada será registrada somente no almoxarifado do seu setor.</p><label>Material<select value={materialId} onChange={(event) => setMaterialId(event.target.value)}>{data.materials.map((material) => <option value={material.id} key={material.id}>{material.name} ({material.sku})</option>)}</select></label><label>Quantidade<input type="number" min="1" value={quantity} onChange={(event) => setQuantity(Number(event.target.value))} /></label><label>Observação<input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ex.: material já disponível na unidade" /></label><div className="modal-actions"><button className="secondary-button" onClick={onClose}>Cancelar</button><button className="primary-button" disabled={!canSubmit} onClick={() => onAdd(materialId, quantity, note.trim())}>Registrar entrada</button></div></div></div>; }
