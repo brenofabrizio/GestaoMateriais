@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "generatedAt": "2026-01-01T00:00:00.000Z",
   "organization": { "id": "org-demo", "name": "Acme Tecnologia Ltda.", "document": "00.000.000/0001-00", "timezone": "America/Sao_Paulo", "currency": "BRL" },
   "areas": [
@@ -41,6 +41,15 @@
     { "id": "bal-adm-chair", "materialId": "mat-chair", "warehouseId": "wh-adm", "sectorId": "ADM", "onHand": 18, "reserved": 2 },
     { "id": "bal-adm-paper", "materialId": "mat-paper", "warehouseId": "wh-adm", "sectorId": "ADM", "onHand": 42, "reserved": 0 },
     { "id": "bal-buy-toner", "materialId": "mat-toner", "warehouseId": "wh-compras", "sectorId": "COMPRAS", "onHand": 3, "reserved": 0 }
+  ],
+  "suppliers": [
+    { "id": "sup-techline", "name": "Techline Suprimentos", "document": "12.345.678/0001-90", "contact": "comercial@techline.demo", "phone": "(11) 3333-1000", "status": "active" },
+    { "id": "sup-officeplus", "name": "OfficePlus Brasil", "document": "23.456.789/0001-12", "contact": "vendas@officeplus.demo", "phone": "(11) 3333-2000", "status": "active" },
+    { "id": "sup-global", "name": "Global Equipamentos", "document": "34.567.890/0001-23", "contact": "pedidos@global.demo", "phone": "(11) 3333-3000", "status": "active" }
+  ],
+  "purchaseOrders": [
+    { "id": "po-1001", "code": "OC-1001", "supplierId": "sup-techline", "requestId": "req-1001", "requesterSector": "RH", "sectorId": "COMPRAS", "status": "approved", "expectedDate": "2026-10-08", "createdAt": "2026-09-30T10:00:00.000Z", "createdBy": "user-compras", "notes": "Compra vinculada à integração de novo colaborador", "items": [{ "materialId": "mat-notebook", "quantity": 1, "unitPrice": 4200 }] },
+    { "id": "po-1002", "code": "OC-1002", "supplierId": "sup-officeplus", "requestId": null, "requesterSector": "ADM", "sectorId": "COMPRAS", "status": "received", "expectedDate": "2026-09-30", "createdAt": "2026-09-25T14:30:00.000Z", "createdBy": "user-compras", "notes": "Reposição de materiais administrativos", "items": [{ "materialId": "mat-paper", "quantity": 20, "unitPrice": 28.5 }, { "materialId": "mat-toner", "quantity": 4, "unitPrice": 390 }] }
   ],
   "requests": [
     { "id": "req-1001", "code": "REQ-1001", "title": "Notebook para novo colaborador", "requesterId": "user-rh", "sectorId": "RH", "approverSector": "TI", "approverId": null, "status": "pending_approval", "createdAt": "2026-09-29T13:20:00.000Z", "items": [{ "materialId": "mat-notebook", "quantity": 1 }] },
