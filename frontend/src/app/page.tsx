@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createId, loadData, resetData, saveData, type AppData } from "@/lib/store";
+import { loginWithApi } from "@/lib/auth";
+import type { SectorCode, SessionUser } from "@/lib/session";
 
 type Section = "overview" | "materials" | "stock" | "requests" | "purchases" | "reports";
 const nav: { id: Section; label: string; icon: string }[] = [
@@ -18,8 +20,6 @@ const statusLabels: Record<string, string> = {
   draft: "Rascunho", rejected: "Rejeitada", delivered: "Entregue", completed: "Finalizada",
 };
 
-type SectorCode = "TI" | "RH" | "ADM" | "COMPRAS";
-type SessionUser = { id: string; name: string; email: string; role: string; sector: SectorCode };
 
 const sectorAccounts: Record<SectorCode, { label: string; email: string; password: string; role: string; description: string }> = {
   TI: { label: "Tecnologia da Informação", email: "ti@acme.demo", password: "Demo@123", role: "Gestor de TI", description: "Ativos, equipamentos e suporte" },
@@ -42,14 +42,24 @@ function LoginScreen({ onLogin }: { onLogin: (user: SessionUser) => void }) {
   const [email, setEmail] = useState(sectorAccounts.TI.email);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const account = sectorAccounts[sector];
   function changeSector(next: SectorCode) { setSector(next); setEmail(sectorAccounts[next].email); setPassword(""); setError(""); }
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (email.trim().toLowerCase() !== account.email || password !== account.password) { setError("E-mail, setor ou senha inválidos."); return; }
-    onLogin({ id: `demo-${sector.toLowerCase()}`, name: account.label, email: account.email, role: account.role, sector });
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setError(""); setLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (apiUrl) {
+        const user = await loginWithApi(apiUrl, email.trim().toLowerCase(), password);
+        if (user.sector !== sector) throw new Error("Este usuário não pertence ao setor selecionado.");
+        onLogin(user);
+      } else {
+        if (email.trim().toLowerCase() !== account.email || password !== account.password) throw new Error("E-mail, setor ou senha inválidos.");
+        onLogin({ id: `demo-${sector.toLowerCase()}`, name: account.label, email: account.email, role: account.role, sector });
+      }
+    } catch (loginError) { setError(loginError instanceof Error ? loginError.message : "Não foi possível entrar."); } finally { setLoading(false); }
   }
-  return <main className="login-page"><section className="login-panel"><div className="login-brand"><span className="brand-mark">GM</span><div><strong>Gestão de Materiais</strong><small>Controle operacional corporativo</small></div></div><div className="login-copy"><p className="eyebrow accent">Acesso por setor</p><h1>Entre para continuar a operação.</h1><p>Escolha seu setor. O sistema aplicará o escopo, as permissões e as próximas ações disponíveis para o seu perfil.</p></div><div className="sector-grid">{(Object.keys(sectorAccounts) as SectorCode[]).map((code) => <button type="button" className={`sector-card${sector === code ? " selected" : ""}`} onClick={() => changeSector(code)} key={code}><strong>{code}</strong><span>{sectorAccounts[code].label}</span><small>{sectorAccounts[code].description}</small></button>)}</div><form className="login-form" onSubmit={submit}><label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label><label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" placeholder="Senha do ambiente" required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="primary-button login-button" type="submit">Entrar como {sector}</button></form><p className="demo-hint">Ambiente de demonstração · senha dos setores: <strong>Demo@123</strong></p></section></main>;
+  return <main className="login-page"><section className="login-panel"><div className="login-brand"><span className="brand-mark">GM</span><div><strong>Gestão de Materiais</strong><small>Controle operacional corporativo</small></div></div><div className="login-copy"><p className="eyebrow accent">Acesso por setor</p><h1>Entre para continuar a operação.</h1><p>Escolha seu setor. O sistema aplicará o escopo, as permissões e as próximas ações disponíveis para o seu perfil.</p></div><div className="sector-grid">{(Object.keys(sectorAccounts) as SectorCode[]).map((code) => <button type="button" className={`sector-card${sector === code ? " selected" : ""}`} onClick={() => changeSector(code)} key={code}><strong>{code}</strong><span>{sectorAccounts[code].label}</span><small>{sectorAccounts[code].description}</small></button>)}</div><form className="login-form" onSubmit={submit}><label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label><label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" placeholder="Senha do ambiente" required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="primary-button login-button" type="submit" disabled={loading}>{loading ? "Autenticando..." : `Entrar como ${sector}`}</button></form><p className="demo-hint">{process.env.NEXT_PUBLIC_API_URL ? "Autenticação via API Django" : <>Ambiente de demonstração · senha dos setores: <strong>Demo@123</strong></>}</p></section></main>;
 }
 
 function Dashboard({ session, onLogout }: { session: SessionUser; onLogout: () => void }) {
